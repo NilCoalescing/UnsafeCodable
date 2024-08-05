@@ -8,11 +8,11 @@
 import Foundation
 
 extension UUID: UnsafeCodable {
-    public func encode(to ptr: inout BoundedMutableRawPointer) throws {
+    public func encode(to ptr: inout BoundedMutableRawPointer) throws(UnsafeCodableError) {
         try ptr.write(value: self.uuid)
     }
     
-    public init(from ptr: inout BoundedReadOnlyRawPointer) throws {
+    public init(from ptr: inout BoundedReadOnlyRawPointer) throws(UnsafeCodableError) {
         let uuid = try ptr.read(uuid_t.self)
         self.init(uuid: uuid)
     }

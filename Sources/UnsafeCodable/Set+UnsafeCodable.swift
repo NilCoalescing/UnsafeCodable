@@ -12,11 +12,11 @@ extension Set<Int>: UnsafeCodable {
         0
     }
     
-    public init(from ptr: inout BoundedReadOnlyRawPointer) throws {
+    public init(from ptr: inout BoundedReadOnlyRawPointer) throws(UnsafeCodableError) {
         self = Set(try ptr.readArray(of: Element.self))
     }
     
-    public func encode(to ptr: inout BoundedMutableRawPointer) throws {
+    public func encode(to ptr: inout BoundedMutableRawPointer) throws(UnsafeCodableError) {
         try ptr.write(array: Array(self))
     }
     

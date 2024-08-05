@@ -12,11 +12,11 @@ extension Double: UnsafeCodable {
         0
     }
     
-    public init(from ptr: inout BoundedReadOnlyRawPointer) throws {
+    public init(from ptr: inout BoundedReadOnlyRawPointer) throws(UnsafeCodableError) {
         self = try ptr.read(Self.self)
     }
     
-    public func encode(to ptr: inout BoundedMutableRawPointer) throws {
+    public func encode(to ptr: inout BoundedMutableRawPointer) throws(UnsafeCodableError) {
         try ptr.write(value: self)
     }
     

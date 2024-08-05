@@ -16,7 +16,7 @@ public struct BoundedMutableRawPointer: ~Copyable {
         self.ptr = ptr
     }
     
-    public mutating func write<T>(value: T) throws {
+    public mutating func write<T>(value: T) throws(UnsafeCodableError) {
         let size = MemoryLayout<T>.size
         guard length >= size else {
             throw UnsafeCodableError.outOfBounds(requested: size, remaining: length)
@@ -27,30 +27,37 @@ public struct BoundedMutableRawPointer: ~Copyable {
         self.length -= size
     }
     
-    public mutating func write<T>(array: [T]) throws {
+    public mutating func write<T>(array: [T]) throws(UnsafeCodableError) {
         try self.write(value: array.count)
         try self.writeRaw(array: array)
     }
     
     
-    private mutating func writeRaw<T>(array: [T]) throws {
+    private mutating func writeRaw<T>(array: [T]) throws(UnsafeCodableError) {
         let size = MemoryLayout<T>.stride * array.count
         guard length >= size else {
             throw UnsafeCodableError.outOfBounds(requested: size, remaining: length)
         }
         
-        try array.withContiguousStorageIfAvailable { ptr in
-            guard let baseAddress = ptr.baseAddress else {
-                throw UnsafeCodableError.unableToUnwrap
+        do {
+            try array.withContiguousStorageIfAvailable { ptr in
+                guard let baseAddress = ptr.baseAddress else {
+                    throw UnsafeCodableError.unableToUnwrap
+                }
+                self.ptr.copyMemory(from: baseAddress, byteCount: size)
             }
-            self.ptr.copyMemory(from: baseAddress, byteCount: size)
+        } catch (let error as UnsafeCodableError) {
+            throw error
+        } catch {
+            throw UnsafeCodableError.memoryError
         }
+        
         self.ptr = self.ptr.advanced(by: size)
         self.length -= size
     }
 
     @inline(__always)
-    public mutating func write(_ block: (_ buffer: inout Self) throws -> UInt64) throws {
+    public mutating func write(_ block: (_ buffer: inout Self) throws(UnsafeCodableError) -> UInt64) throws(UnsafeCodableError) {
         let sizePrefixPointer = self.ptr
         try self.write(value: UInt64(0))
         let count = try block(&self)

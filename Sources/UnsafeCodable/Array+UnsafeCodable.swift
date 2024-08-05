@@ -16,7 +16,7 @@ extension Array: UnsafeCodable where Element: UnsafeCodable {
         self.reduce(0, { $0 + $1.sizeInBytes }) + MemoryLayout<Int>.size
     }
     
-    public init(from ptr: inout BoundedReadOnlyRawPointer) throws {
+    public init(from ptr: inout BoundedReadOnlyRawPointer) throws(UnsafeCodableError) {
         let count = try ptr.read(Int.self)
         self = Array<Element>()
         self.reserveCapacity(count)
@@ -25,7 +25,7 @@ extension Array: UnsafeCodable where Element: UnsafeCodable {
         }
     }
     
-    public func encode(to ptr: inout BoundedMutableRawPointer) throws {
+    public func encode(to ptr: inout BoundedMutableRawPointer) throws(UnsafeCodableError) {
         try ptr.write(value: self.count)
         for point in self {
             try point.encode(to: &ptr)

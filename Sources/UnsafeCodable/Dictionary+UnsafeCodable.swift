@@ -10,7 +10,7 @@ import Foundation
 extension Dictionary: UnsafeCodable where Key: UnsafeCodable, Value: UnsafeCodable {
     public static var UNSAFE_CODABLE_VERSION: UInt8 { 0 }
     
-    public init(from ptr: inout BoundedReadOnlyRawPointer) throws {
+    public init(from ptr: inout BoundedReadOnlyRawPointer) throws(UnsafeCodableError) {
         try ptr.assertVersion(Self.UNSAFE_CODABLE_VERSION)
         self = [:]
         let count = try ptr.read(Int.self)
@@ -22,7 +22,7 @@ extension Dictionary: UnsafeCodable where Key: UnsafeCodable, Value: UnsafeCodab
         
     }
     
-    public func encode(to ptr: inout BoundedMutableRawPointer) throws {
+    public func encode(to ptr: inout BoundedMutableRawPointer) throws(UnsafeCodableError) {
         try ptr.write(value: Self.UNSAFE_CODABLE_VERSION)
         try ptr.write(value: self.count)
         for (index, value) in self {

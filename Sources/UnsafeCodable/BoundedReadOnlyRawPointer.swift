@@ -16,14 +16,14 @@ public struct BoundedReadOnlyRawPointer: ~Copyable {
         self.ptr = ptr
     }
     
-    public mutating func assertVersion(_ value: UInt8) throws {
+    public mutating func assertVersion(_ value: UInt8) throws(UnsafeCodableError) {
         let version = try self.read(UInt8.self)
         guard version == value else {
             throw UnsafeCodableError.versionError(expected: value, read: version)
         }
     }
     
-    public mutating func read<T>(_ type: T.Type) throws -> T {
+    public mutating func read<T>(_ type: T.Type) throws(UnsafeCodableError) -> T {
         let size = MemoryLayout<T>.size
         guard length >= size else {
             throw UnsafeCodableError.outOfBounds(requested: size, remaining: length)
@@ -38,45 +38,61 @@ public struct BoundedReadOnlyRawPointer: ~Copyable {
     }
     
     
-    public mutating func readArray<T>(of type: T.Type, with count: Int) throws -> [T] {
+    public mutating func readArray<T>(of type: T.Type, with count: Int) throws(UnsafeCodableError) -> [T] {
         let size = MemoryLayout<T>.stride * count
         guard length >= size else {
             throw UnsafeCodableError.outOfBounds(requested: size, remaining: length)
         }
-        
-        let array = try Array<T>(unsafeUninitializedCapacity: count) { (buffer, initializedCount) in
-            guard let baseAddress = buffer.baseAddress else {
-                throw UnsafeCodableError.unableToUnwrap
+        let array: [T]
+        do {
+            array = try Array<T>(unsafeUninitializedCapacity: count) { (buffer, initializedCount) in
+                guard let baseAddress = buffer.baseAddress else {
+                    throw UnsafeCodableError.unableToUnwrap
+                }
+                UnsafeMutableRawPointer(mutating: baseAddress).copyMemory(
+                    from: self.ptr,
+                    byteCount: size
+                )
+                initializedCount = count
             }
-            UnsafeMutableRawPointer(mutating: baseAddress).copyMemory(
-                from: self.ptr,
-                byteCount: size
-            )
-            initializedCount = count
+        } catch (let error as UnsafeCodableError) {
+            throw error
+        } catch {
+            throw UnsafeCodableError.memoryError
         }
+        
         self.length -= size
         self.ptr = self.ptr.advanced(by: size)
         
         return array
     }
     
-    public mutating func readArray<T>(of type: T.Type) throws -> [T] {
+    public mutating func readArray<T>(of type: T.Type) throws(UnsafeCodableError) -> [T] {
         let count = try self.read(Int.self)
         let size = MemoryLayout<T>.stride * count
         guard length >= size else {
             throw UnsafeCodableError.outOfBounds(requested: size, remaining: length)
         }
         
-        let array = try Array<T>(unsafeUninitializedCapacity: count) { (buffer, initializedCount) in
-            guard let baseAddress = buffer.baseAddress else {
-                throw UnsafeCodableError.unableToUnwrap
+        let array: [T]
+        do {
+            array = try Array<T>(unsafeUninitializedCapacity: count) { (buffer, initializedCount) in
+                guard let baseAddress = buffer.baseAddress else {
+                    throw UnsafeCodableError.unableToUnwrap
+                }
+                UnsafeMutableRawPointer(mutating: baseAddress).copyMemory(
+                    from: self.ptr,
+                    byteCount: size
+                )
+                initializedCount = count
             }
-            UnsafeMutableRawPointer(mutating: baseAddress).copyMemory(
-                from: self.ptr,
-                byteCount: size
-            )
-            initializedCount = count
+        } catch (let error as UnsafeCodableError) {
+            throw error
+        } catch {
+            throw UnsafeCodableError.memoryError
         }
+        
+        
         self.length -= size
         self.ptr = self.ptr.advanced(by: size)
         
@@ -84,7 +100,7 @@ public struct BoundedReadOnlyRawPointer: ~Copyable {
     }
     
     @inline(__always)
-    public mutating func read(_ block: (_ buffer: inout Self, _ count: UInt64) throws -> Void) throws {
+    public mutating func read(_ block: (_ buffer: inout Self, _ count: UInt64) throws(UnsafeCodableError) -> Void) throws(UnsafeCodableError) {
         let count = try self.read(UInt64.self)
         try block(&self, count)
     }
