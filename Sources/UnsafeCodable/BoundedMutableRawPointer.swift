@@ -7,6 +7,7 @@
 
 import Foundation
 
+
 public struct BoundedMutableRawPointer: ~Copyable {
     public private(set) var length: Int
     public private(set) var ptr: UnsafeMutableRawPointer
@@ -16,7 +17,7 @@ public struct BoundedMutableRawPointer: ~Copyable {
         self.ptr = ptr
     }
     
-    public mutating func write<T>(value: T) throws(UnsafeCodableError) {
+    public mutating func write<T>(value: T) throws(UnsafeCodableError) where T: Copyable {
         let size = MemoryLayout<T>.size
         guard length >= size else {
             throw UnsafeCodableError.outOfBounds(requested: size, remaining: length)
@@ -57,7 +58,7 @@ public struct BoundedMutableRawPointer: ~Copyable {
     }
 
     @inline(__always)
-    public mutating func write(_ block: (_ buffer: inout Self) throws(UnsafeCodableError) -> UInt64) throws(UnsafeCodableError) {
+    public mutating func writeBlock(_ block: (_ buffer: inout Self) throws(UnsafeCodableError) -> UInt64) throws(UnsafeCodableError) {
         let sizePrefixPointer = self.ptr
         try self.write(value: UInt64(0))
         let count = try block(&self)
