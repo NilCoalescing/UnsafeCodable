@@ -7,14 +7,14 @@
 import Foundation
 
 extension Data {
-    func unsafelyDecoding<T>(as targetType: T.Type) throws -> T where T: UnsafeCodable {
+    public func unsafelyDecoding<T>(as targetType: T.Type) throws -> T where T: UnsafeCodable {
         return try self.withUnsafeBytes { ptr in
             var boundedPtr = BoundedReadOnlyRawPointer(ptr)
             return try T(from: &boundedPtr)
         }
     }
     
-    init<T>(encoding: T) throws where T: UnsafeCodable {
+    public init<T>(encoding: T) throws where T: UnsafeCodable {
         let size = encoding.maximumSizeInBytes
         self.init(count: size)
         try self.withUnsafeMutableBytes { ptr in
