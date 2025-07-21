@@ -19,7 +19,6 @@ extension Dictionary: UnsafeCodable where Key: UnsafeCodable, Value: UnsafeCodab
             let value = try Value(from: &ptr)
             self[index] = value
         }
-        
     }
     
     public func encode(to ptr: inout BoundedMutableRawPointer) throws(UnsafeCodableError) {
