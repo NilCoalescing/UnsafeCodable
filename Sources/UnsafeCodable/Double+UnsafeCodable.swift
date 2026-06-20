@@ -39,13 +39,8 @@ extension Bool: UnsafeCodable {}
 extension Duration: UnsafeCodable {}
 
 
-#if arch(arm64)
-@available(iOS 14.0, macOS 26.0, tvOS 14.0, watchOS 7.0, *)
-extension Float16: UnsafeCodable {}
-#else
 @available(iOS 14.0, tvOS 14.0, watchOS 7.0, *)
 extension Float16: UnsafeCodable {}
-#endif
 
 
 #if arch(x86_64)
