@@ -14,22 +14,20 @@ extension SIMD4: UnsafeCodable where Scalar: BitwiseCopyable {
         0
     }
     
-    public init(from ptr: inout BoundedReadOnlyRawPointer) throws(UnsafeCodableError) where Scalar.SIMD4Storage: BitwiseCopyable {
-        self = try ptr.read(Self.self)
-    }
-    
-    @_disfavoredOverload
     public init(from ptr: inout BoundedReadOnlyRawPointer) throws(UnsafeCodableError) {
-        fatalError("SIMD4 scalar must be bitwise copyable")
+        self = Self(
+            try ptr.read(Scalar.self),
+            try ptr.read(Scalar.self),
+            try ptr.read(Scalar.self),
+            try ptr.read(Scalar.self)
+        )
     }
     
-    public func encode(to ptr: inout BoundedMutableRawPointer) throws(UnsafeCodableError) where Scalar.SIMD4Storage: BitwiseCopyable {
-        try ptr.write(value: self)
-    }
-    
-    @_disfavoredOverload
     public func encode(to ptr: inout BoundedMutableRawPointer) throws(UnsafeCodableError) {
-        fatalError("SIMD4 scalar must be bitwise copyable")
+        try ptr.write(value: self.x)
+        try ptr.write(value: self.y)
+        try ptr.write(value: self.z)
+        try ptr.write(value: self.w)
     }
     
     
@@ -43,22 +41,16 @@ extension SIMD2: UnsafeCodable where Scalar: BitwiseCopyable {
         0
     }
 
-    public init(from ptr: inout BoundedReadOnlyRawPointer) throws(UnsafeCodableError) where Scalar.SIMD2Storage: BitwiseCopyable {
-        self = try ptr.read(Self.self)
-    }
-
-    @_disfavoredOverload
     public init(from ptr: inout BoundedReadOnlyRawPointer) throws(UnsafeCodableError) {
-        fatalError("SIMD2 scalar must be bitwise copyable")
+        self = Self(
+            try ptr.read(Scalar.self),
+            try ptr.read(Scalar.self)
+        )
     }
 
-    public func encode(to ptr: inout BoundedMutableRawPointer) throws(UnsafeCodableError) where Scalar.SIMD2Storage: BitwiseCopyable {
-        try ptr.write(value: self)
-    }
-
-    @_disfavoredOverload
     public func encode(to ptr: inout BoundedMutableRawPointer) throws(UnsafeCodableError) {
-        fatalError("SIMD2 scalar must be bitwise copyable")
+        try ptr.write(value: self.x)
+        try ptr.write(value: self.y)
     }
 
     public var sizeInBytes: Int {
